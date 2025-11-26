@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+
+{% block title %}Reservar {{ disciplina[1] }} - Gimnasio MultiSport{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Botón Volver -->
+    <a href="{{ url_for('index') }}" class="btn btn-outline-light mb-4">
+        <i class="bi bi-arrow-left me-2"></i>Volver
+    </a>
+
+    <!-- Info de Disciplina -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title text-primary fw-bold">
+                <i class="bi bi-star-fill me-2"></i>
+                {{ disciplina[1] }}
+            </h2>
+            <p class="card-text text-muted">{{ disciplina[2] }}</p>
+        </div>
+    </div>
+
+    <!-- Calendario de Horarios -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-calendar-week me-2"></i>
+                Horarios Disponibles - Semana Actual
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 100px;">Hora</th>
+                            {% for date in week_dates %}
+                            <th class="text-center">
+                                <div class="fw-bold small">{{ dias_semana[loop.index0] }}</div>
+                                <div class="text-muted small">{{ date.strftime('%d/%m') }}</div>
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hora in horas_ordenadas %}
+                        <tr>
+                            <td class="fw-bold align-middle">{{ hora }}</td>
+                            {% for idx in range(7) %}
+                                {% set dia = dias_semana[idx] %}
+                                {% set date = week_dates[idx] %}
+                                {% set horario_id = horarios_map.get(dia, {}).get(hora, None) %}
+
+                                {# Verificar si el horario ya pasó #}
+                                {% set hora_partes = hora.split(':') %}
+                                {% set hora_clase = date.replace(hour=hora_partes[0]|int, minute=hora_partes[1]|int, second=0, microsecond=0) %}
+                                {% set horario_pasado = hora_clase < current_datetime %}
+
+                                {% if horario_id %}
+                                    {% if horario_pasado %}
+                                    {# Horario que ya pasó - Deshabilitado #}
+                                    <td class="text-center align-middle bg-secondary bg-opacity-25" style="cursor: not-allowed;">
+                                        <div class="horario-info">
+                                            <div class="horario-content">
+                                                <i class="bi bi-clock-history text-muted"></i>
+                                                <div class="small mt-1 text-muted">Pasado</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    {% else %}
+                                    {# Horario futuro - Disponible #}
+                                    <td class="text-center align-middle position-relative horario-cell" 
+                                        data-horario-id="{{ horario_id }}"
+                                        data-fecha="{{ date.strftime('%Y-%m-%d') }}"
+                                        data-dia="{{ dia }}"
+                                        data-hora="{{ hora }}"
+                                        style="cursor: pointer;">
+                                        <div class="horario-info">
+                                            <div class="spinner-border spinner-border-sm text-primary d-none" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                            <div class="horario-content">
+                                                <i class="bi bi-circle-fill text-success"></i>
+                                                <div class="small mt-1 cupos-text">Verificando...</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    {% endif %}
+                                {% else %}
+                                <td class="bg-light"></td>
+                                {% endif %}
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer text-muted">
+            <small>
+                <i class="bi bi-circle-fill text-success me-1"></i> Disponible
+                <i class="bi bi-circle-fill text-danger ms-3 me-1"></i> Completo
+                <i class="bi bi-circle-fill text-warning ms-3 me-1"></i> Últimos lugares
+            </small>
+        </div>
+    </div>
+
+    <!-- Formulario de Reserva (oculto inicialmente) -->
+    <div class="card d-none" id="formularioReserva">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-check-circle me-2"></i>
+                Completar Reserva
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <strong>Turno seleccionado:</strong> 
+                <span id="turnoSeleccionado"></span>
+            </div>
+
+            <form action="{{ url_for('confirmar_reserva') }}" method="POST" enctype="multipart/form-data" id="formReserva">
+                <input type="hidden" name="horario_id" id="horario_id">
+                <input type="hidden" name="fecha_clase" id="fecha_clase">
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Nombre *</label>
+                        <input type="text" class="form-control" name="nombre" required 
+                               pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" 
+                               title="Solo letras y espacios">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Apellido *</label>
+                        <input type="text" class="form-control" name="apellido" required
+                               pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+"
+                               title="Solo letras y espacios">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">DNI *</label>
+                        <input type="text" class="form-control" name="dni" required
+                               pattern="[0-9]{7,8}"
+                               title="DNI debe tener 7 u 8 dígitos"
+                               placeholder="Sin puntos ni espacios">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Comprobante de Pago</label>
+                        <input type="file" class="form-control" name="comprobante" 
+                               accept="image/*,.pdf">
+                        <small class="text-muted">Opcional - Máximo 5MB (JPG, PNG, PDF)</small>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-success w-100 btn-lg">
+                            <i class="bi bi-check-circle me-2"></i>
+                            Confirmar Reserva
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Verificar disponibilidad de todos los horarios al cargar
+document.addEventListener('DOMContentLoaded', function() {
+    const cells = document.querySelectorAll('.horario-cell');
+    
+    console.log('Total de celdas encontradas:', cells.length);
+    
+    cells.forEach(cell => {
+        const horarioId = cell.dataset.horarioId;
+        const fecha = cell.dataset.fecha;
+        
+        console.log('Verificando horario:', horarioId, 'fecha:', fecha);
+        
+        // Verificar disponibilidad
+        fetch(`/check_disponibilidad/${horarioId}/${fecha}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Respuesta para horario', horarioId, ':', data);
+                
+                const icon = cell.querySelector('i');
+                const cuposText = cell.querySelector('.cupos-text');
+                
+                if (data.disponible) {
+                    const restantes = data.cupos_restantes;
+                    
+                    if (restantes <= 3) {
+                        icon.className = 'bi bi-circle-fill text-warning';
+                        cuposText.textContent = `${restantes} lugares`;
+                    } else {
+                        icon.className = 'bi bi-circle-fill text-success';
+                        cuposText.textContent = `${restantes} cupos`;
+                    }
+                    
+                    cell.classList.add('disponible');
+                } else {
+                    icon.className = 'bi bi-circle-fill text-danger';
+                    cuposText.textContent = 'Completo';
+                    cell.style.cursor = 'not-allowed';
+                    cell.classList.remove('disponible');
+                }
+            })
+            .catch(error => {
+                console.error('Error al verificar horario:', error);
+                cell.querySelector('.cupos-text').textContent = 'Error';
+            });
+    });
+    
+    // Manejar click en horarios disponibles
+    document.addEventListener('click', function(e) {
+        const cell = e.target.closest('.horario-cell.disponible');
+        if (!cell) return;
+        
+        console.log('Click en celda disponible');
+        
+        // Remover selección previa
+        document.querySelectorAll('.horario-cell').forEach(c => {
+            c.classList.remove('table-primary', 'border-primary');
+            c.style.borderWidth = '';
+        });
+        
+        // Marcar como seleccionado
+        cell.classList.add('table-primary', 'border-primary');
+        cell.style.borderWidth = '3px';
+        
+        // Obtener datos
+        const horarioId = cell.dataset.horarioId;
+        const fecha = cell.dataset.fecha;
+        const dia = cell.dataset.dia;
+        const hora = cell.dataset.hora;
+        
+        console.log('Datos del turno:', { horarioId, fecha, dia, hora });
+        
+        // Actualizar formulario
+        document.getElementById('horario_id').value = horarioId;
+        document.getElementById('fecha_clase').value = fecha;
+        document.getElementById('turnoSeleccionado').textContent = 
+            `${dia} ${formatearFecha(fecha)} - ${hora}hs`;
+        
+        // Mostrar formulario
+        const form = document.getElementById('formularioReserva');
+        form.classList.remove('d-none');
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+});
+
+function formatearFecha(fecha) {
+    const [year, month, day] = fecha.split('-');
+    return `${day}/${month}/${year}`;
+}
+
+// Validación del formulario
+document.getElementById('formReserva').addEventListener('submit', function(e) {
+    const fileInput = document.querySelector('input[name="comprobante"]');
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        if (file.size > 5 * 1024 * 1024) {
+            e.preventDefault();
+            alert('El archivo debe ser menor a 5MB');
+            return false;
+        }
+    }
+});
+</script>
+
+<style>
+.horario-cell {
+    transition: all 0.3s ease;
+    padding: 15px 5px !important;
+}
+
+.horario-cell:hover.disponible {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+    transform: scale(1.05);
+}
+
+.horario-cell.table-primary {
+    background-color: rgba(13, 110, 253, 0.25) !important;
+}
+
+.horario-info {
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.horario-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.horario-content i {
+    font-size: 1.5rem;
+}
+
+/* Estilo para horarios pasados */
+.bg-secondary.bg-opacity-25 {
+    background-color: rgba(108, 117, 125, 0.15) !important;
+}
+
+.bg-secondary.bg-opacity-25 .horario-content {
+    opacity: 0.5;
+}
+
+/* Evitar hover en horarios pasados */
+.bg-secondary.bg-opacity-25:hover {
+    transform: none !important;
+}
+
+@media (max-width: 768px) {
+    .table {
+        font-size: 0.85rem;
+    }
+    
+    .horario-content i {
+        font-size: 1.2rem;
+    }
+    
+    .horario-cell {
+        padding: 10px 3px !important;
+    }
+}
+</style>
+{% endblock %}

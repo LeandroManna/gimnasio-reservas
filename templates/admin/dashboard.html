@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Panel Administrador{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-white fw-bold">
+            <i class="bi bi-speedometer2 me-2"></i>
+            Dashboard
+        </h2>
+    </div>
+
+    <!-- Cards de Estadísticas -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-2">RESERVAS CONFIRMADAS</h6>
+                            <h2 class="fw-bold mb-0">{{ total_reservas }}</h2>
+                        </div>
+                        <div>
+                            <i class="bi bi-calendar-check-fill" style="font-size: 3rem; opacity: 0.5;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card bg-gradient text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-2">DISCIPLINAS ACTIVAS</h6>
+                            <h2 class="fw-bold mb-0">{{ total_disciplinas }}</h2>
+                        </div>
+                        <div>
+                            <i class="bi bi-list-task" style="font-size: 3rem; opacity: 0.5;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accesos Rápidos -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-lightning-fill me-2"></i>
+                Accesos Rápidos
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <a href="{{ url_for('admin_reservas') }}" class="text-decoration-none">
+                        <div class="card text-center h-100 hover-card">
+                            <div class="card-body">
+                                <i class="bi bi-calendar-check-fill text-primary" style="font-size: 3rem;"></i>
+                                <h5 class="card-title mt-3">Ver Reservas</h5>
+                                <p class="card-text text-muted">Gestiona todas las reservas</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                
+                <div class="col-md-4">
+                    <a href="{{ url_for('admin_disciplinas') }}" class="text-decoration-none">
+                        <div class="card text-center h-100 hover-card">
+                            <div class="card-body">
+                                <i class="bi bi-list-task text-success" style="font-size: 3rem;"></i>
+                                <h5 class="card-title mt-3">Disciplinas</h5>
+                                <p class="card-text text-muted">Administra disciplinas y horarios</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                
+                <div class="col-md-4">
+                    <a href="{{ url_for('index') }}" class="text-decoration-none" target="_blank">
+                        <div class="card text-center h-100 hover-card">
+                            <div class="card-body">
+                                <i class="bi bi-eye-fill text-info" style="font-size: 3rem;"></i>
+                                <h5 class="card-title mt-3">Ver Sitio</h5>
+                                <p class="card-text text-muted">Vista del cliente</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información del Sistema -->
+    <div class="card mt-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                Información del Sistema
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="fw-bold mb-3">Funcionalidades Principales</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Sistema de reservas online
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Gestión de disciplinas y horarios
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Control de cupos automático
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Carga de comprobantes de pago
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold mb-3">Herramientas de Administración</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-primary me-2"></i>
+                            Ver y eliminar reservas
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-primary me-2"></i>
+                            Agregar reservas manualmente
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-primary me-2"></i>
+                            ABM de disciplinas
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-primary me-2"></i>
+                            Configuración de horarios
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hover-card {
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-5px);
+        border-color: #667eea;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+</style>
+{% endblock %}

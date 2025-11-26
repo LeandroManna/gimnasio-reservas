@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Reservas - Panel Administrador{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-white fw-bold">
+            <i class="bi bi-calendar-check me-2"></i>
+            Gestión de Reservas
+        </h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light">
+            <i class="bi bi-arrow-left me-2"></i>Volver
+        </a>
+    </div>
+
+    <!-- Estadísticas Rápidas -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="text-white-50">Total Reservas</h6>
+                    <h3 class="mb-0">{{ reservas|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="text-white-50">Esta Semana</h6>
+                    <h3 class="mb-0">
+                        {% set count = namespace(value=0) %}
+                        {% for r in reservas %}
+                            {% if (r[4]|string)[:10] >= (now()|string)[:10] %}
+                                {% set count.value = count.value + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ count.value }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="text-white-50">Confirmadas</h6>
+                    <h3 class="mb-0">
+                        {% set count = namespace(value=0) %}
+                        {% for r in reservas %}
+                            {% if r[7] == 'confirmada' %}
+                                {% set count.value = count.value + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ count.value }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Reservas -->
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-table me-2"></i>
+                    Todas las Reservas
+                </h5>
+                <div>
+                    <input type="text" id="searchInput" class="form-control form-control-sm" 
+                           placeholder="Buscar por nombre o DNI...">
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if reservas %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0" id="tablaReservas">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Cliente</th>
+                            <th>DNI</th>
+                            <th>Disciplina</th>
+                            <th>Fecha Clase</th>
+                            <th>Hora</th>
+                            <th>Estado</th>
+                            <th>Comprobante</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for reserva in reservas %}
+                    <tr>
+                        <td class="fw-bold">{{ reserva[0] }}</td>
+                        <td>
+                            <i class="bi bi-person-fill text-primary me-2"></i>
+                            {{ reserva[1] }} {{ reserva[2] }}
+                        </td>
+                        <td>{{ reserva[3] }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ reserva[6] }}</span>
+                        </td>
+                        <td>
+                            <i class="bi bi-calendar-event me-1"></i>
+                            {{ reserva[4].strftime('%d/%m/%Y') }}
+                        </td>
+                        <td>
+                            <i class="bi bi-clock me-1"></i>
+                            {{ reserva[5]|format_time }}  <!-- CORREGIDO -->
+                        </td>
+                        <td>
+                            {% if reserva[7] == 'confirmada' %}
+                            <span class="badge bg-success">Confirmada</span>
+                            {% elif reserva[7] == 'pendiente' %}
+                            <span class="badge bg-warning">Pendiente</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Cancelada</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if reserva[8] %}
+                            <a href="{{ url_for('static', filename='uploads/comprobantes/' + reserva[8]) }}" 
+                               target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-file-earmark-image"></i>
+                            </a>
+                            {% else %}
+                            <span class="text-muted">Sin archivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin_eliminar_reserva', reserva_id=reserva[0]) }}" 
+                               class="btn btn-sm btn-danger"
+                               onclick="return confirm('¿Estás seguro de eliminar esta reserva?')">
+                                <i class="bi bi-trash-fill"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+                <h4 class="mt-3 text-muted">No hay reservas registradas</h4>
+                <p class="text-muted">Las reservas aparecerán aquí cuando los clientes reserven turnos</p>
+            </div>
+            {% endif %}
+        </div>
+        {% if reservas %}
+        <div class="card-footer text-muted">
+            <small>Total: {{ reservas|length }} reserva(s)</small>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Búsqueda en tiempo real
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const searchTerm = this.value.toLowerCase();
+    const table = document.getElementById('tablaReservas');
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const text = row.textContent.toLowerCase();
+        
+        if (text.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    }
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table tbody tr {
+        transition: all 0.2s ease;
+    }
+    
+    .table tbody tr:hover {
+        background-color: rgba(102, 126, 234, 0.1) !important;
+        transform: scale(1.01);
+    }
+    
+    @media (max-width: 768px) {
+        .table {
+            font-size: 0.85rem;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}

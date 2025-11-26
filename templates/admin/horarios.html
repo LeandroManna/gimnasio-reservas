@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}Horarios de {{ disciplina[1] }} - Panel Administrador{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-white fw-bold">
+            <i class="bi bi-clock-history me-2"></i>
+            Horarios: {{ disciplina[1] }}
+        </h2>
+        <div>
+            <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#modalAgregar">
+                <i class="bi bi-plus-circle me-2"></i>Agregar Horario
+            </button>
+            <a href="{{ url_for('admin_disciplinas') }}" class="btn btn-outline-light">
+                <i class="bi bi-arrow-left me-2"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <!-- Info de la Disciplina -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h4 class="mb-2">{{ disciplina[1] }}</h4>
+                    <p class="text-muted mb-0">{{ disciplina[2] if disciplina[2] else 'Sin descripción' }}</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="badge {% if disciplina[3] %}bg-success{% else %}bg-secondary{% endif %} px-4 py-2">
+                        {% if disciplina[3] %}Activa{% else %}Inactiva{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Horarios -->
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-calendar-week me-2"></i>
+                Horarios Configurados
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            {% if horarios %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Día de la Semana</th>
+                            <th>Hora de Inicio</th>
+                            <th>Cupo Máximo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for horario in horarios %}
+                        <tr>
+                            <td class="fw-bold">{{ horario[0] }}</td>
+                            <td>
+                                <i class="bi bi-calendar-day text-primary me-2"></i>
+                                <strong>{{ horario[1] }}</strong>
+                            </td>
+                            <td>
+                                <i class="bi bi-clock text-success me-2"></i>
+                                {{ horario[2]|format_time }}
+                            </td>
+                            <td>
+                                <span class="badge bg-info px-3 py-2">
+                                    <i class="bi bi-people-fill me-1"></i>
+                                    {{ horario[3] }} personas
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('admin_eliminar_horario', horario_id=horario[0], disciplina_id=disciplina[0]) }}" 
+                                   class="btn btn-sm btn-danger"
+                                   onclick="return confirm('¿Eliminar este horario? Se eliminarán todas sus reservas.')">
+                                    <i class="bi bi-trash-fill"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-calendar-x" style="font-size: 4rem; color: #ccc;"></i>
+                <h4 class="mt-3 text-muted">No hay horarios configurados</h4>
+                <p class="text-muted">Agregá horarios para que los clientes puedan reservar</p>
+                <button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#modalAgregar">
+                    <i class="bi bi-plus-circle me-2"></i>Agregar Primer Horario
+                </button>
+            </div>
+            {% endif %}
+        </div>
+        {% if horarios %}
+        <div class="card-footer text-muted">
+            <small>Total: {{ horarios|length }} horario(s) configurado(s)</small>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Vista por Día -->
+    {% if horarios %}
+    <div class="card mt-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-calendar3 me-2"></i>
+                Vista por Día
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                {% set dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] %}
+                {% for dia in dias %}
+                    {% set horarios_dia = [] %}
+                    {% for h in horarios %}
+                        {% if h[1] == dia %}
+                            {% set _ = horarios_dia.append(h) %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if horarios_dia %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <strong>{{ dia }}</strong>
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                {% for h in horarios_dia %}
+                                <li class="list-group-item">
+                                    <i class="bi bi-clock-fill text-success me-2"></i>
+                                    {{ h[2]|format_time }}
+                                    <span class="badge bg-secondary float-end">{{ h[3] }} cupos</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal Agregar Horario -->
+<div class="modal fade" id="modalAgregar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Agregar Nuevo Horario
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_agregar_horario', disciplina_id=disciplina[0]) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Día de la Semana *</label>
+                        <select class="form-select" name="dia_semana" required>
+                            <option value="">Selecciona un día...</option>
+                            <option value="Lunes">Lunes</option>
+                            <option value="Martes">Martes</option>
+                            <option value="Miércoles">Miércoles</option>
+                            <option value="Jueves">Jueves</option>
+                            <option value="Viernes">Viernes</option>
+                            <option value="Sábado">Sábado</option>
+                            <option value="Domingo">Domingo</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Hora de Inicio *</label>
+                        <input type="time" class="form-control" name="hora_inicio" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Cupo Máximo *</label>
+                        <input type="number" class="form-control" name="cupo_maximo" 
+                               value="10" min="1" max="50" required>
+                        <small class="text-muted">Número máximo de personas por clase</small>
+                    </div>
+                    <div class="alert alert-info small">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Este horario estará disponible todas las semanas en el día seleccionado.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-2"></i>Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

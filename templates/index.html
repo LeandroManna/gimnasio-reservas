@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Selecciona tu Disciplina - Gimnasio MultiSport{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="text-center text-white mb-5">
+        <h1 class="display-4 fw-bold mb-3">
+            <i class="bi bi-trophy-fill"></i> 
+            Juan Aguirre Fitness
+        </h1>
+        <p class="lead">Elegí tu disciplina favorita y reservá tu lugar</p>
+    </div>
+
+    <!-- Grid de Disciplinas -->
+    <div class="row g-4">
+        {% for disciplina in disciplinas %}
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <!-- Icono según disciplina -->
+                    <div class="mb-3">
+                        {% if 'yoga' in disciplina[1]|lower %}
+                            <i class="bi bi-activity" style="font-size: 4rem; color: #667eea;"></i>
+                        {% elif 'spinning' in disciplina[1]|lower %}
+                            <i class="bi bi-bicycle" style="font-size: 4rem; color: #667eea;"></i>
+                        {% elif 'funcional' in disciplina[1]|lower or 'cross' in disciplina[1]|lower %}
+                            <i class="bi bi-lightning-charge-fill" style="font-size: 4rem; color: #667eea;"></i>
+                        {% elif 'pilates' in disciplina[1]|lower %}
+                            <i class="bi bi-flower1" style="font-size: 4rem; color: #667eea;"></i>
+                        {% elif 'zumba' in disciplina[1]|lower or 'baile' in disciplina[1]|lower %}
+                            <i class="bi bi-music-note-beamed" style="font-size: 4rem; color: #667eea;"></i>
+                        {% elif 'box' in disciplina[1]|lower %}
+                            <i class="bi bi-shield-fill-check" style="font-size: 4rem; color: #667eea;"></i>
+                        {% else %}
+                            <i class="bi bi-heart-pulse-fill" style="font-size: 4rem; color: #667eea;"></i>
+                        {% endif %}
+                    </div>
+                    
+                    <h4 class="card-title fw-bold mb-3">{{ disciplina[1] }}</h4>
+                    <p class="card-text text-muted mb-4">
+                        {{ disciplina[2] if disciplina[2] else 'Entrena con los mejores profesionales' }}
+                    </p>
+                    
+                    <a href="{{ url_for('reservar', disciplina_id=disciplina[0]) }}" 
+                       class="btn btn-primary w-100">
+                        <i class="bi bi-calendar-check-fill me-2"></i>
+                        Reservar Turno
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% if not disciplinas %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+                    <h4 class="mt-3 text-muted">No hay disciplinas disponibles</h4>
+                    <p class="text-muted">Por favor, volvé más tarde</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Información Adicional -->
+    <div class="row mt-5">
+        <div class="col-md-4 mb-4">
+            <div class="card text-center h-100 bg-white bg-opacity-75">
+                <div class="card-body">
+                    <i class="bi bi-clock-fill text-primary" style="font-size: 2.5rem;"></i>
+                    <h5 class="card-title mt-3">Horarios Flexibles</h5>
+                    <p class="card-text text-muted">Encontrá el horario que mejor se adapte a tu rutina</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card text-center h-100 bg-white bg-opacity-75">
+                <div class="card-body">
+                    <i class="bi bi-people-fill text-primary" style="font-size: 2.5rem;"></i>
+                    <h5 class="card-title mt-3">Grupos Reducidos</h5>
+                    <p class="card-text text-muted">Máximo 10 personas por clase para mejor atención</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card text-center h-100 bg-white bg-opacity-75">
+                <div class="card-body">
+                    <i class="bi bi-phone-fill text-primary" style="font-size: 2.5rem;"></i>
+                    <h5 class="card-title mt-3">Reservá Online</h5>
+                    <p class="card-text text-muted">Sistema simple y rápido desde tu celular</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-10px);
+    }
+    
+    .btn-primary {
+        transition: all 0.3s ease;
+    }
+</style>
+{% endblock %}

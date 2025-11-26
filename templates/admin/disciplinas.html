@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Disciplinas - Panel Administrador{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-white fw-bold">
+            <i class="bi bi-list-task me-2"></i>
+            Gestión de Disciplinas
+        </h2>
+        <div>
+            <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#modalAgregar">
+                <i class="bi bi-plus-circle me-2"></i>Agregar Disciplina
+            </button>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light">
+                <i class="bi bi-arrow-left me-2"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <!-- Grid de Disciplinas -->
+    <div class="row g-4">
+        {% for disciplina in disciplinas %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 {% if not disciplina[3] %}bg-light{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h4 class="card-title fw-bold mb-0">
+                            {{ disciplina[1] }}
+                        </h4>
+                        <div class="btn-group">
+                            <a href="{{ url_for('admin_toggle_disciplina', disciplina_id=disciplina[0]) }}" 
+                               class="btn btn-sm {% if disciplina[3] %}btn-success{% else %}btn-secondary{% endif %}"
+                               title="{% if disciplina[3] %}Desactivar{% else %}Activar{% endif %}">
+                                <i class="bi bi-power"></i>
+                            </a>
+                            <a href="{{ url_for('admin_eliminar_disciplina', disciplina_id=disciplina[0]) }}" 
+                               class="btn btn-sm btn-danger"
+                               onclick="return confirm('¿Eliminar esta disciplina? Se eliminarán todos sus horarios y reservas.')"
+                               title="Eliminar">
+                                <i class="bi bi-trash-fill"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <p class="card-text text-muted mb-3">
+                        {{ disciplina[2] if disciplina[2] else 'Sin descripción' }}
+                    </p>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge {% if disciplina[3] %}bg-success{% else %}bg-secondary{% endif %} px-3 py-2">
+                            <i class="bi bi-circle-fill me-1"></i>
+                            {% if disciplina[3] %}Activa{% else %}Inactiva{% endif %}
+                        </span>
+                        
+                        <a href="{{ url_for('admin_horarios', disciplina_id=disciplina[0]) }}" 
+                           class="btn btn-primary btn-sm">
+                            <i class="bi bi-clock-history me-1"></i>
+                            Ver Horarios
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer text-muted small">
+                    <i class="bi bi-calendar-plus me-1"></i>
+                    Creada: {{ disciplina[4].strftime('%d/%m/%Y') }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% if not disciplinas %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+                    <h4 class="mt-3 text-muted">No hay disciplinas registradas</h4>
+                    <p class="text-muted">Agregá tu primera disciplina usando el botón de arriba</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal Agregar Disciplina -->
+<div class="modal fade" id="modalAgregar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Agregar Nueva Disciplina
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_agregar_disciplina') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre *</label>
+                        <input type="text" class="form-control" name="nombre" required
+                               placeholder="Ej: Yoga, Spinning, Pilates">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Descripción</label>
+                        <textarea class="form-control" name="descripcion" rows="3"
+                                  placeholder="Descripción breve de la disciplina"></textarea>
+                    </div>
+                    <div class="alert alert-info small">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Después de crear la disciplina, podrás agregar horarios para ella.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-2"></i>Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    }
+    
+    .bg-light {
+        opacity: 0.7;
+    }
+</style>
+{% endblock %}
